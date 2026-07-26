@@ -3,6 +3,7 @@
 Playwright + TypeScript end-to-end test suite covering the Sauce Labs checkout journey ([saucedemo.com](https://www.saucedemo.com)).
 
 [![Playwright Tests](https://github.com/WillyPess/saucedemo-playwright-e2e/actions/workflows/playwright.yml/badge.svg)](https://github.com/WillyPess/saucedemo-playwright-e2e/actions/workflows/playwright.yml)
+[![Latest report](https://img.shields.io/badge/latest%20report-online-blue)](https://willypess.github.io/saucedemo-playwright-e2e/report/) · [Test Plan & Bug Registry (live)](https://willypess.github.io/saucedemo-playwright-e2e/test-plan/)
 
 ![Demo](docs/demo.gif)
 <!-- TODO: record a short GIF showing `npx playwright test --ui` or a full run, save it to docs/demo.gif -->

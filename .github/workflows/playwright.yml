@@ -25,3 +25,29 @@ jobs:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
+    - name: Assemble GitHub Pages site
+      if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+      run: |
+        mkdir -p site/report site/test-plan
+        cp -r playwright-report/. site/report/
+        cp -r test-plan/. site/test-plan/
+        cat > site/index.html <<'EOF'
+        <!doctype html>
+        <html>
+        <head><meta charset="utf-8"><title>Sauce Labs E2E Suite</title></head>
+        <body>
+          <h1>Sauce Labs E2E Suite</h1>
+          <ul>
+            <li><a href="test-plan/">Test Plan &amp; Bug Registry</a></li>
+            <li><a href="report/">Latest Playwright HTML Report</a></li>
+          </ul>
+        </body>
+        </html>
+        EOF
+    - name: Publish to GitHub Pages
+      if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: site
+        publish_branch: gh-pages
