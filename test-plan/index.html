@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Plan — Sauce Labs E2E Suite</title>
+<script>
+  (function () {
+    var savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A1929;
+    --bg-grid: rgba(255,255,255,0.035);
+    --panel:#0F2540;
+    --panel-2:#122C4C;
+    --ink:#DCE8F2;
+    --ink-dim:#8CA3BD;
+    --ink-faint:#5C7B9C;
+    --line:#28496C;
+    --line-strong:#3A6390;
+    --cyan:#5EEAD4;
+    --cyan-dim:#2C6E63;
+    --amber:#F5B942;
+    --amber-dim:#6B5322;
+    --coral:#FF8080;
+    --coral-dim:#6B3232;
+    --radius:2px;
+  }
+
+  :root[data-theme="light"]{
+    --bg:#F4F8FC;
+    --bg-grid: rgba(15,42,68,0.05);
+    --panel:#FFFFFF;
+    --panel-2:#E6EEF6;
+    --ink:#0F2A44;
+    --ink-dim:#3D5975;
+    --ink-faint:#5D7A97;
+    --line:#C3D5E6;
+    --line-strong:#8FAFCB;
+    --cyan:#0E7C6B;
+    --cyan-dim:#CFF3EA;
+    --amber:#8A5D00;
+    --amber-dim:#FBE8B8;
+    --coral:#B23434;
+    --coral-dim:#FBDADA;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, var(--bg-grid) 0px, var(--bg-grid) 1px, transparent 1px, transparent 32px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0px, var(--bg-grid) 1px, transparent 1px, transparent 32px),
+      var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+
+  a{ color:var(--cyan); }
+
+  ::selection{ background:var(--cyan); color:var(--bg); }
+
+  :focus-visible{
+    outline:2px solid var(--cyan);
+    outline-offset:2px;
+  }
+
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  /* ---------- Header ---------- */
+
+  header{
+    max-width:1100px;
+    margin:0 auto;
+    padding:64px 32px 40px;
+    border-bottom:1px solid var(--line);
+  }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--cyan);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:8px; height:8px;
+    background:var(--cyan);
+    display:inline-block;
+    box-shadow:0 0 8px var(--cyan);
+  }
+
+  .header-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  .header-top .eyebrow{ margin-bottom:0; }
+  .header-actions{
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .header-link{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    text-decoration:none;
+  }
+  .header-link:hover{ color:var(--coral); }
+  .theme-toggle{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    background:transparent;
+    color:var(--ink-dim);
+    border:1px solid var(--line);
+    padding:7px 14px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .theme-toggle:hover{ border-color:var(--line-strong); color:var(--ink); }
+
+  h1{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:clamp(28px, 4vw, 44px);
+    letter-spacing:-0.01em;
+    margin:0 0 12px;
+    line-height:1.15;
+  }
+  h1 span{ color:var(--ink-dim); font-weight:400; }
+
+  .sub{
+    color:var(--ink-dim);
+    font-size:16px;
+    max-width:640px;
+    line-height:1.6;
+    margin:0 0 32px;
+  }
+
+  .meta-strip{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    border:1px solid var(--line);
+  }
+  .meta-cell{
+    padding:16px 18px;
+    border-right:1px solid var(--line);
+  }
+  .meta-cell:last-child{ border-right:none; }
+  .meta-cell .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:24px;
+    font-weight:600;
+    color:var(--ink);
+    display:block;
+  }
+  .meta-cell .lbl{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--ink-faint);
+    display:block;
+    margin-top:4px;
+  }
+  .meta-cell.automated .num{ color:var(--cyan); }
+  .meta-cell.planned .num{ color:var(--amber); }
+
+  @media (max-width:640px){
+    .meta-strip{ grid-template-columns:repeat(2, 1fr); }
+    .meta-cell{ border-bottom:1px solid var(--line); }
+  }
+
+  /* ---------- Filter bar ---------- */
+
+  .filter-bar{
+    max-width:1100px;
+    margin:0 auto;
+    padding:24px 32px 0;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:10;
+    padding-bottom:16px;
+  }
+  .filter-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    background:transparent;
+    color:var(--ink-dim);
+    border:1px solid var(--line);
+    padding:9px 16px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .filter-btn:hover{ border-color:var(--line-strong); color:var(--ink); }
+  .filter-btn.active{
+    background:var(--cyan);
+    border-color:var(--cyan);
+    color:var(--bg);
+    font-weight:600;
+  }
+
+  /* ---------- Sections ---------- */
+
+  main{
+    max-width:1100px;
+    margin:0 auto;
+    padding:8px 32px 96px;
+  }
+
+  .feature-section{
+    margin-top:56px;
+  }
+
+  .feature-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;
+    margin-bottom:24px;
+  }
+  .feature-head h2{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:20px;
+    font-weight:600;
+    margin:0;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .feature-head h2 .idx{
+    color:var(--ink-faint);
+    font-weight:400;
+  }
+  .feature-head .target{
+    font-size:13px;
+    color:var(--ink-faint);
+  }
+  .feature-head .target code{
+    color:var(--ink-dim);
+    background:var(--panel);
+    padding:2px 6px;
+    border-radius:var(--radius);
+  }
+
+  .case-grid{
+    display:grid;
+    gap:16px;
+  }
+
+  /* ---------- Test case card ---------- */
+
+  .case{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:22px 24px;
+  }
+  .case::before, .case::after{
+    content:"";
+    position:absolute;
+    width:10px; height:10px;
+    border-top:2px solid var(--line-strong);
+    border-left:2px solid var(--line-strong);
+    top:-1px; left:-1px;
+  }
+  .case::after{
+    left:auto; right:-1px;
+    top:auto; bottom:-1px;
+    border-top:none; border-left:none;
+    border-bottom:2px solid var(--line-strong);
+    border-right:2px solid var(--line-strong);
+  }
+
+  .case-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+
+  .case-id{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-faint);
+    letter-spacing:0.05em;
+    display:block;
+    margin-bottom:4px;
+  }
+
+  .case-title{
+    font-size:16.5px;
+    font-weight:600;
+    color:var(--ink);
+    margin:0;
+  }
+
+  .stamp{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    padding:5px 10px;
+    border:1.5px solid currentColor;
+    border-radius:3px;
+    white-space:nowrap;
+    transform:rotate(-2deg);
+    flex-shrink:0;
+  }
+  .stamp.automated{ color:var(--cyan); }
+  .stamp.planned{ color:var(--amber); }
+
+  .chip-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    padding:3px 9px;
+    border-radius:20px;
+    letter-spacing:0.03em;
+  }
+  .chip.type-positive{ background:var(--cyan-dim); color:var(--cyan); }
+  .chip.type-negative{ background:var(--coral-dim); color:var(--coral); }
+  .chip.priority{ background:var(--panel-2); color:var(--ink-dim); border:1px solid var(--line); }
+
+  .case-body{
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:720px){
+    .case-body{ grid-template-columns:1fr; }
+  }
+
+  .field-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--ink-faint);
+    margin:0 0 8px;
+  }
+
+  .steps{
+    margin:0;
+    padding-left:20px;
+    color:var(--ink-dim);
+    font-size:13.5px;
+    line-height:1.7;
+  }
+  .steps li::marker{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--ink-faint);
+  }
+
+  .expected{
+    font-size:13.5px;
+    color:var(--ink);
+    line-height:1.6;
+    background:var(--panel-2);
+    border-left:2px solid var(--cyan);
+    padding:10px 14px;
+  }
+  .case.is-negative .expected{ border-left-color:var(--coral); }
+
+  /* ---------- Bug registry ---------- */
+
+  .bug-card{
+    border-color:var(--coral-dim);
+  }
+  .bug-card::before, .bug-card::after{
+    border-color:var(--coral);
+  }
+  .bug-compare{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-top:16px;
+  }
+  @media (max-width:720px){
+    .bug-compare{ grid-template-columns:1fr; }
+  }
+  .expected-block, .actual-block{
+    font-size:13.5px;
+    color:var(--ink);
+    line-height:1.6;
+    background:var(--panel-2);
+    padding:10px 14px;
+    margin:0;
+  }
+  .expected-block{ border-left:2px solid var(--cyan); }
+  .actual-block{ border-left:2px solid var(--coral); }
+
+  .chip.severity-low{ background:var(--panel-2); color:var(--ink-dim); border:1px solid var(--line); }
+  .chip.severity-medium{ background:var(--amber-dim); color:var(--amber); }
+  .chip.severity-high{ background:var(--coral-dim); color:var(--coral); }
+  .chip.severity-critical{ background:var(--coral); color:var(--bg); font-weight:700; }
+  .chip.status-open{ background:var(--coral-dim); color:var(--coral); }
+  .chip.status-fixed{ background:var(--cyan-dim); color:var(--cyan); }
+
+  .bug-empty{
+    grid-column:1 / -1;
+    padding:40px 24px;
+    text-align:center;
+    color:var(--ink-faint);
+    border:1px dashed var(--line);
+    font-size:14px;
+  }
+
+  .bug-screenshot img{
+    max-width:100%;
+    height:auto;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    margin-top:2px;
+  }
+
+  /* ---------- Footer ---------- */
+
+  footer{
+    max-width:1100px;
+    margin:0 auto;
+    padding:40px 32px 64px;
+    border-top:1px solid var(--line);
+    color:var(--ink-faint);
+    font-size:13px;
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  footer a{ color:var(--ink-dim); }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="eyebrow">Test Plan · Rev. 1</div>
+    <div class="header-actions">
+      <a href="#bug-registry" class="header-link">Bug Registry ↓</a>
+      <button type="button" id="theme-toggle" class="theme-toggle">Light</button>
+    </div>
+  </div>
+  <h1>Sauce Labs <span>E2E Test Suite</span></h1>
+  <p class="sub">
+    Functional test coverage for the checkout journey on
+    <a href="https://www.saucedemo.com/" target="_blank" rel="noopener">saucedemo.com</a>,
+    automated with Playwright + TypeScript. This plan tracks what is built, what is
+    queued, and the exact expected result for each case.
+  </p>
+
+  <div class="meta-strip">
+    <div class="meta-cell">
+      <span class="num">25</span>
+      <span class="lbl">Total cases</span>
+    </div>
+    <div class="meta-cell automated">
+      <span class="num">22</span>
+      <span class="lbl">Automated</span>
+    </div>
+    <div class="meta-cell planned">
+      <span class="num">3</span>
+      <span class="lbl">Planned</span>
+    </div>
+    <div class="meta-cell">
+      <span class="num">7</span>
+      <span class="lbl">Feature areas</span>
+    </div>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="automated">Automated</button>
+  <button class="filter-btn" data-filter="planned">Planned</button>
+  <button class="filter-btn" data-filter="negative">Negative cases</button>
+</div>
+
+<main>
+
+  <!-- LOGIN -->
+  <section class="feature-section" id="login">
+    <div class="feature-head">
+      <h2><span class="idx">01 /</span> Login</h2>
+      <span class="target">Page object: <code>pages/LoginPage.ts</code></span>
+    </div>
+    <div class="case-grid">
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-LOGIN-001</span>
+            <h3 class="case-title">Successful login with a valid user</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: High</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Open saucedemo.com</li>
+              <li>Enter a valid username and password</li>
+              <li>Submit the login form</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">User is redirected to <code>/inventory.html</code>.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case is-negative" data-status="automated" data-type="negative">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-LOGIN-002</span>
+            <h3 class="case-title">Login fails with a locked-out user</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-negative">Negative</span>
+          <span class="chip priority">Priority: High</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Open saucedemo.com</li>
+              <li>Enter the credentials for a locked-out account</li>
+              <li>Submit the login form</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Login is rejected. Error banner is visible with the exact locked-out message.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case is-negative" data-status="automated" data-type="negative">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-LOGIN-003</span>
+            <h3 class="case-title">Login fails with the wrong password</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-negative">Negative</span>
+          <span class="chip priority">Priority: High</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Open saucedemo.com</li>
+              <li>Enter a valid username with an incorrect password</li>
+              <li>Submit the login form</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Login is rejected. Error banner shows the exact invalid-credentials message.</p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- INVENTORY -->
+  <section class="feature-section" id="inventory">
+    <div class="feature-head">
+      <h2><span class="idx">02 /</span> Inventory</h2>
+      <span class="target">Page object: <code>pages/InventoryPage.ts</code></span>
+    </div>
+    <div class="case-grid">
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-INV-001</span>
+            <h3 class="case-title">Inventory page lists all 6 products</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Medium</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Log in with a valid user</li>
+              <li>Land on the inventory page</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Exactly 6 product cards are rendered, each with name, price, and an "Add to cart" control.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-INV-002</span>
+            <h3 class="case-title">Sort products by price, low to high</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Medium</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>On the inventory page, open the sort dropdown</li>
+              <li>Select "Price (low to high)"</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Product list re-renders in strictly ascending price order.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-INV-003</span>
+            <h3 class="case-title">Sort products by price, high to low</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Low</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>On the inventory page, open the sort dropdown</li>
+              <li>Select "Price (high to low)"</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Product list re-renders in strictly descending price order.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-INV-004</span>
+            <h3 class="case-title">Sort products by name, A to Z</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Low</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>On the inventory page, open the sort dropdown</li>
+              <li>Select "Name (A to Z)"</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Product list re-renders in alphabetical order.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-INV-005</span>
+            <h3 class="case-title">Adding a product updates the cart badge</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: High</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>On the inventory page, click "Add to cart" on one product</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Cart icon badge shows "1". The button changes to "Remove".</p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- CART -->
+  <section class="feature-section" id="cart">
+    <div class="feature-head">
+      <h2><span class="idx">03 /</span> Cart</h2>
+      <span class="target">Page object: <code>pages/CartPage.ts</code></span>
+    </div>
+    <div class="case-grid">
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-CART-001</span>
+            <h3 class="case-title">Add a single item to the cart</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: High</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Add one product from the inventory page</li>
+              <li>Open the cart page</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">The cart page lists exactly that one item, with matching name and price.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-CART-002</span>
+            <h3 class="case-title">Remove an item from the cart</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: High</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>With one item in the cart, open the cart page</li>
+              <li>Click "Remove" on that item</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Item disappears from the list. Cart badge clears (no count shown).</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-CART-003</span>
+            <h3 class="case-title">Cart badge count matches items added</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Medium</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Add 3 different products from the inventory page</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Cart badge reads "3" at every point during the additions.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-CART-004</span>
+            <h3 class="case-title">"Continue Shopping" returns to inventory</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Low</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Open the cart page</li>
+              <li>Click "Continue Shopping"</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">User is returned to <code>/inventory.html</code> with cart contents unchanged.</p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- CHECKOUT -->
+  <section class="feature-section" id="checkout">
+    <div class="feature-head">
+      <h2><span class="idx">04 /</span> Checkout</h2>
+      <span class="target">Page objects: <code>CheckoutPage.ts</code>, <code>CheckoutStep2Page.ts</code></span>
+    </div>
+    <div class="case-grid">
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-CO-001</span>
+            <h3 class="case-title">Complete checkout with valid customer info</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: High</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>With items in the cart, click "Checkout"</li>
+              <li>Fill first name, last name, and postal code</li>
+              <li>Click "Continue", then "Finish"</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Order confirmation page is shown with the "Thank you for your order" message.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case is-negative" data-status="automated" data-type="negative">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-CO-002</span>
+            <h3 class="case-title">Checkout blocked when a required field is missing</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-negative">Negative</span>
+          <span class="chip priority">Priority: High</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Start checkout with items in the cart</li>
+              <li>Leave the postal code field empty</li>
+              <li>Click "Continue"</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Form does not advance. An inline error names the missing field.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-CO-003</span>
+            <h3 class="case-title">Order summary reflects correct item total</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Medium</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Add 2 known products to the cart</li>
+              <li>Proceed to the checkout overview step</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Item total equals the sum of the 2 product prices. Tax and total are both greater than the item total.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-CO-004</span>
+            <h3 class="case-title">Cancel during checkout returns to the cart</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Low</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Start checkout</li>
+              <li>Click "Cancel" on the customer info step</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">User returns to the cart page with all items still present.</p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- SPECIAL USERS -->
+  <section class="feature-section" id="special-users">
+    <div class="feature-head">
+      <h2><span class="idx">05 /</span> Special Users</h2>
+      <span class="target">Page object: <code>pages/LoginPage.ts</code> (existing, reused)</span>
+    </div>
+    <div class="case-grid">
+
+      <article class="case" data-status="planned" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-USR-001</span>
+            <h3 class="case-title">problem_user: inventory images bug is present</h3>
+          </div>
+          <span class="stamp planned">Planned</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Medium</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Log in as problem_user</li>
+              <li>Land on inventory page</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Login succeeds. Product images are visibly identical/mismatched across items (documented known defect) — test asserts this defect is still present, acting as a regression watchdog rather than a pass/fail on desired behavior.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="planned" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-USR-002</span>
+            <h3 class="case-title">performance_glitch_user: login succeeds within extended timeout</h3>
+          </div>
+          <span class="stamp planned">Planned</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Low</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Log in as performance_glitch_user with a longer timeout than standard login</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Login eventually succeeds and redirects to inventory.html, confirming the app doesn't hard-fail under load, even though it's slow.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case is-negative" data-status="planned" data-type="negative">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-USR-003</span>
+            <h3 class="case-title">error_user: exploratory — confirm actual breaking behavior</h3>
+          </div>
+          <span class="stamp planned">Planned</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-negative">Negative</span>
+          <span class="chip priority">Priority: Medium</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Log in as error_user</li>
+              <li>Attempt the full checkout flow</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">To be confirmed during implementation. Note: behavior must be verified against the live site before writing assertions; do not assume.</p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- NAVIGATION MENU -->
+  <section class="feature-section" id="navigation-menu">
+    <div class="feature-head">
+      <h2><span class="idx">06 /</span> Navigation Menu</h2>
+      <span class="target">Page object: <code>pages/MenuPage.ts</code></span>
+    </div>
+    <div class="case-grid">
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-NAV-001</span>
+            <h3 class="case-title">Logout returns to the login page</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: High</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Log in</li>
+              <li>Open the hamburger menu</li>
+              <li>Click Logout</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">User is returned to the login page.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-NAV-002</span>
+            <h3 class="case-title">Reset App State clears the cart</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Medium</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Log in</li>
+              <li>Add 2 items to the cart</li>
+              <li>Open the hamburger menu</li>
+              <li>Click Reset App State</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Cart badge disappears (no count shown), while staying on the same page.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-NAV-003</span>
+            <h3 class="case-title">All Items returns to inventory from any page</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Low</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>Log in</li>
+              <li>Navigate to the cart page</li>
+              <li>Open the hamburger menu</li>
+              <li>Click All Items</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">User is returned to <code>/inventory.html</code>.</p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- PRODUCT DETAIL PAGE -->
+  <section class="feature-section" id="product-detail-page">
+    <div class="feature-head">
+      <h2><span class="idx">07 /</span> Product Detail Page</h2>
+      <span class="target">Page object: <code>pages/ProductDetailPage.ts</code></span>
+    </div>
+    <div class="case-grid">
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-PDP-001</span>
+            <h3 class="case-title">Product detail page shows correct name and price</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Medium</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>On the inventory page, click a product's name or image</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Detail page opens, showing the same product name and price as the inventory listing.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-PDP-002</span>
+            <h3 class="case-title">Add to cart from the detail page updates the badge</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Medium</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>On a product detail page, click Add to cart</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">Cart badge shows "1".</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case" data-status="automated" data-type="positive">
+        <div class="case-top">
+          <div>
+            <span class="case-id">TC-PDP-003</span>
+            <h3 class="case-title">Back to products returns to inventory</h3>
+          </div>
+          <span class="stamp automated">Automated</span>
+        </div>
+        <div class="chip-row">
+          <span class="chip type-positive">Positive</span>
+          <span class="chip priority">Priority: Low</span>
+        </div>
+        <div class="case-body">
+          <div>
+            <p class="field-label">Steps</p>
+            <ol class="steps">
+              <li>On a product detail page, click Back to products</li>
+            </ol>
+          </div>
+          <div>
+            <p class="field-label">Expected result</p>
+            <p class="expected">User returns to <code>/inventory.html</code>.</p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- BUG REGISTRY -->
+  <section class="feature-section" id="bug-registry">
+    <div class="feature-head">
+      <h2><span class="idx">08 /</span> Bug Registry</h2>
+      <span class="target">Defects found during test automation</span>
+    </div>
+    <div class="case-grid">
+
+      <!-- NOTE: may also affect TC-INV-001 ("lists all 6 products") if the live catalog now has more than 6 items — re-verify product count against the live site before the next inventory test run. -->
+      <article class="case bug-card" data-status="open">
+        <div class="case-top">
+          <div>
+            <span class="case-id">BUG-001</span>
+            <h3 class="case-title">Product name displays as an internal test placeholder instead of a real product name</h3>
+          </div>
+          <div class="chip-row">
+            <span class="chip severity-low">Severity: Low</span>
+            <span class="chip status-open">Status: Open</span>
+          </div>
+        </div>
+        <div class="chip-row">
+          <span class="chip priority">Linked: TC-INV-001</span>
+          <span class="chip priority">Found in: standard_user, Chrome, /inventory.html</span>
+        </div>
+        <div class="bug-screenshot">
+          <p class="field-label">Screenshot</p>
+          <img src="assets/bug-001.png" alt="Inventory product card showing the name &quot;Test.allTheThings() T-Shirt (Red)&quot; instead of a real product name">
+        </div>
+        <div>
+          <p class="field-label">Steps to reproduce</p>
+          <ol class="steps">
+            <li>Log in with standard_user</li>
+            <li>Land on the inventory page</li>
+            <li>Scroll down through the product list</li>
+          </ol>
+        </div>
+        <div class="bug-compare">
+          <div>
+            <p class="field-label">Expected</p>
+            <p class="expected-block">All products display a real, descriptive, customer-facing name consistent with the rest of the catalog.</p>
+          </div>
+          <div>
+            <p class="field-label">Actual</p>
+            <p class="actual-block">One product displays as "Test.allTheThings() T-Shirt (Red)" — a name that reads like an internal test string rather than a shipped product name.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="case bug-card" data-status="open">
+        <div class="case-top">
+          <div>
+            <span class="case-id">BUG-002</span>
+            <h3 class="case-title">error_user cannot remove items from the inventory page</h3>
+          </div>
+          <div class="chip-row">
+            <span class="chip severity-medium">Severity: Medium</span>
+            <span class="chip status-open">Status: Open</span>
+          </div>
+        </div>
+        <div class="chip-row">
+          <span class="chip priority">Linked: TC-USR-003</span>
+          <span class="chip priority">Found in: error_user, Chrome, /inventory.html</span>
+        </div>
+        <div class="bug-screenshot">
+          <p class="field-label">Screenshot</p>
+          <img src="assets/bug-002.png" alt="Inventory page showing the Remove button failing to remove an item from the cart for error_user">
+        </div>
+        <div>
+          <p class="field-label">Steps to reproduce</p>
+          <ol class="steps">
+            <li>Log in with error_user</li>
+            <li>Add a product to the cart from the inventory page</li>
+            <li>Attempt to click "Remove" on that same product from the inventory page</li>
+          </ol>
+        </div>
+        <div class="bug-compare">
+          <div>
+            <p class="field-label">Expected</p>
+            <p class="expected-block">Clicking "Remove" on the inventory page removes the item from the cart, same as it does for standard_user.</p>
+          </div>
+          <div>
+            <p class="field-label">Actual</p>
+            <p class="actual-block">The "Remove" button on the inventory page does not remove the item when logged in as error_user. The item can only be removed by navigating to the cart page and removing it from there.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- TEMPLATE — copy this block to log a new bug
+      <article class="case bug-card" data-status="open">
+        <div class="case-top">
+          <div>
+            <span class="case-id">BUG-001</span>
+            <h3 class="case-title">Short, specific bug title</h3>
+          </div>
+          <div class="chip-row">
+            <span class="chip severity-medium">Severity: Medium</span>
+            <span class="chip status-open">Status: Open</span>
+          </div>
+        </div>
+        <div class="chip-row">
+          <span class="chip priority">Linked: TC-XXX-000</span>
+          <span class="chip priority">Found in: Chrome / standard_user</span>
+        </div>
+        <div>
+          <p class="field-label">Steps to reproduce</p>
+          <ol class="steps">
+            <li>Step one</li>
+            <li>Step two</li>
+            <li>Step three</li>
+          </ol>
+        </div>
+        <div class="bug-compare">
+          <div>
+            <p class="field-label">Expected</p>
+            <p class="expected-block">What should happen.</p>
+          </div>
+          <div>
+            <p class="field-label">Actual</p>
+            <p class="actual-block">What actually happens.</p>
+          </div>
+        </div>
+      </article>
+      -->
+
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>Sauce Labs E2E Suite — maintained by Willy Pessoa</span>
+  <span>Playwright + TypeScript · <a href="https://github.com/WillyPess" target="_blank" rel="noopener">github.com/WillyPess</a></span>
+</footer>
+
+<script>
+  const buttons = document.querySelectorAll('.filter-btn');
+  const cases = document.querySelectorAll('.case');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+
+      cases.forEach(c => {
+        let show = true;
+        if(filter === 'automated') show = c.dataset.status === 'automated';
+        else if(filter === 'planned') show = c.dataset.status === 'planned';
+        else if(filter === 'negative') show = c.dataset.type === 'negative';
+        c.classList.toggle('hidden', !show);
+      });
+
+      document.querySelectorAll('.feature-section').forEach(section => {
+        const visibleCases = section.querySelectorAll('.case:not(.hidden)');
+        section.classList.toggle('hidden', visibleCases.length === 0);
+      });
+    });
+  });
+
+  const themeToggle = document.getElementById('theme-toggle');
+  function currentTheme(){
+    return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  }
+  function updateToggleLabel(){
+    themeToggle.textContent = currentTheme() === 'light' ? 'Dark' : 'Light';
+  }
+  updateToggleLabel();
+  themeToggle.addEventListener('click', () => {
+    const next = currentTheme() === 'light' ? 'dark' : 'light';
+    if (next === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    localStorage.setItem('theme', next);
+    updateToggleLabel();
+  });
+</script>
+
+</body>
+</html>
