@@ -6,12 +6,11 @@ Playwright + TypeScript end-to-end test suite covering the Sauce Labs checkout j
 [![Latest report](https://img.shields.io/badge/latest%20report-online-blue)](https://willypess.github.io/saucedemo-playwright-e2e/report/) · [Test Plan & Bug Registry (live)](https://willypess.github.io/saucedemo-playwright-e2e/test-plan/)
 
 ![Demo](docs/demo.gif)
-<!-- TODO: record a short GIF showing `npx playwright test --ui` or a full run, save it to docs/demo.gif -->
 
 ## What this demonstrates
 
 - **Page Object Model** — each page of the app is encapsulated in its own class: `LoginPage`, `InventoryPage`, `CartPage`, `CheckoutPage`, `CheckoutStep2Page`, `MenuPage`, `ProductDetailPage` ([pages/](pages/))
-- **Centralized test data** — usernames/passwords and expected UI copy live in [tests/data/users.ts](tests/data/users.ts) and [tests/data/messages.ts](tests/data/messages.ts), not hardcoded in specs
+- **Centralized test data** — usernames/passwords, expected UI copy and the product catalog live in [tests/data/users.ts](tests/data/users.ts), [tests/data/messages.ts](tests/data/messages.ts) and [tests/data/products.ts](tests/data/products.ts), not hardcoded in specs
 - **Cross-browser coverage** — Chromium, Firefox, and WebKit locally; Chromium via `ubuntu-latest` in CI
 - **Multiple reporters** — list, HTML, and JUnit output for both local runs and CI consumption
 
@@ -42,13 +41,19 @@ npm install
 npx playwright install
 
 # run the full suite (Chromium, Firefox, WebKit)
-npx playwright test
+npm test
+
+# run Chromium only (what CI runs)
+npm run test:chromium
 
 # run interactively with the Playwright UI
-npx playwright test --ui
+npm run test:ui
 
 # view the last HTML report
-npx playwright show-report
+npm run report
+
+# type-check the specs and page objects
+npm run typecheck
 ```
 
 ## Project structure
@@ -57,7 +62,7 @@ npx playwright show-report
 pages/          Page Object Model classes (LoginPage, InventoryPage, CartPage, ...)
 tests/
   e2e/          Spec files (login, inventory, cart, checkout, menu, product-detail)
-  data/         Centralized test data (users, messages)
+  data/         Centralized test data (users, messages, products)
 test-plan/      Living test plan and bug registry (index.html)
 docs/           Demo GIF and screenshots referenced by this README
 ```

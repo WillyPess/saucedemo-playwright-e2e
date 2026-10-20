@@ -4,6 +4,7 @@ import { CheckoutPage } from '../../pages/CheckoutPage';
 import { CheckoutStep2Page } from '../../pages/CheckoutStep2Page';
 import { InventoryPage } from '../../pages/InventoryPage';
 import { LoginPage } from '../../pages/LoginPage';
+import { products, taxRate } from '../data/products';
 import { users } from '../data/users';
 
 test.describe('Checkout', () => {
@@ -48,28 +49,29 @@ test.describe('Checkout', () => {
     await expect(checkoutPage.errorMessage).toContainText('Postal Code is required');
   });
 
-  test('TC-CO-003: order summary reflects correct item total', async ({ page }) => {
+  test('TC-CO-003: order summary reflects correct item total, tax and total', async ({ page }) => {
     const inventoryPage = new InventoryPage(page);
     const cartPage = new CartPage(page);
     const checkoutPage = new CheckoutPage(page);
     const checkoutStep2Page = new CheckoutStep2Page(page);
 
-    await inventoryPage.addProductToCart('Sauce Labs Backpack');
-    await inventoryPage.addProductToCart('Sauce Labs Bike Light');
+    await inventoryPage.addProductToCart(products.backpack.name);
+    await inventoryPage.addProductToCart(products.bikeLight.name);
     await inventoryPage.goToCart();
     await cartPage.checkout();
 
     await checkoutPage.fillInfo('John', 'Doe', '12345');
     await checkoutPage.continueCheckout();
 
-    const expectedItemTotal = 29.99 + 9.99;
+    const expectedItemTotal = products.backpack.price + products.bikeLight.price;
+    const expectedTax = Math.round(expectedItemTotal * taxRate * 100) / 100;
     const itemTotal = await checkoutStep2Page.getItemTotal();
     const tax = await checkoutStep2Page.getTax();
     const total = await checkoutStep2Page.getTotal();
 
     expect(itemTotal).toBeCloseTo(expectedItemTotal, 2);
-    expect(tax).toBeGreaterThan(0);
-    expect(total).toBeGreaterThan(itemTotal);
+    expect(tax).toBeCloseTo(expectedTax, 2);
+    expect(total).toBeCloseTo(itemTotal + tax, 2);
   });
 
   test('TC-CO-004: cancel during checkout returns to the cart', async ({ page }) => {

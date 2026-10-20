@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { InventoryPage } from '../../pages/InventoryPage';
 import { LoginPage } from '../../pages/LoginPage';
+import { catalog, formatPrice } from '../data/products';
 import { users } from '../data/users';
 
 test.describe('Inventory', () => {
@@ -18,32 +19,33 @@ test.describe('Inventory', () => {
 
   test('TC-INV-002: sort products by price, low to high', async ({ page }) => {
     const inventoryPage = new InventoryPage(page);
+    const expectedPrices = catalog.map((p) => p.price).sort((a, b) => a - b).map(formatPrice);
 
     await inventoryPage.sortBy('Price (low to high)');
-    const prices = await inventoryPage.getProductPrices();
-    const sortedPrices = [...prices].sort((a, b) => a - b);
 
-    expect(prices).toEqual(sortedPrices);
+    await expect(inventoryPage.itemPrices).toHaveText(expectedPrices);
   });
 
   test('TC-INV-003: sort products by price, high to low', async ({ page }) => {
     const inventoryPage = new InventoryPage(page);
+    const expectedPrices = catalog.map((p) => p.price).sort((a, b) => b - a).map(formatPrice);
 
     await inventoryPage.sortBy('Price (high to low)');
-    const prices = await inventoryPage.getProductPrices();
-    const sortedPrices = [...prices].sort((a, b) => b - a);
 
-    expect(prices).toEqual(sortedPrices);
+    await expect(inventoryPage.itemPrices).toHaveText(expectedPrices);
   });
 
   test('TC-INV-004: sort products by name, A to Z', async ({ page }) => {
     const inventoryPage = new InventoryPage(page);
+    const expectedNames = catalog.map((p) => p.name).sort((a, b) => a.localeCompare(b));
+
+    // The list loads in A to Z order, so sort Z to A first to prove the A to Z sort does something.
+    await inventoryPage.sortBy('Name (Z to A)');
+    await expect(inventoryPage.itemNames).toHaveText([...expectedNames].reverse());
 
     await inventoryPage.sortBy('Name (A to Z)');
-    const names = await inventoryPage.getProductNames();
-    const sortedNames = [...names].sort((a, b) => a.localeCompare(b));
 
-    expect(names).toEqual(sortedNames);
+    await expect(inventoryPage.itemNames).toHaveText(expectedNames);
   });
 
   test('TC-INV-005: adding a product updates the cart badge to "1"', async ({ page }) => {

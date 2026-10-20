@@ -1,15 +1,28 @@
 {
-  "name": "playwright---ai",
+  "name": "saucedemo-playwright-e2e",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {},
-  "keywords": [],
-  "author": "",
+  "description": "Playwright + TypeScript end-to-end test suite for the Sauce Labs demo shop (saucedemo.com)",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "playwright",
+    "typescript",
+    "e2e",
+    "qa",
+    "page-object-model"
+  ],
+  "author": "Willy Pessoa",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
     "@playwright/test": "^1.62.0",
-    "@types/node": "^26.1.1"
+    "@types/node": "^26.1.1",
+    "typescript": "^5.9.3"
   }
 }
